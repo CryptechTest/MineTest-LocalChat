@@ -58,19 +58,20 @@ end
 
 minetest.register_on_chat_message(function(name, message)
     local player = minetest.get_player_by_name(name)
-
+    local transfer_distance = minetest.settings:get("player_transfer_distance") or 100
     if not player then
         return true
     end
 
     local isLocal = message:len() < 2 or message:sub(0, 1) ~= "!"
     local temp = -1
-    local format = handleColors(_if(isLocal, "(&3L&f)", "(&6G&f)").." <&e"..name.."&f> &7").._if(isLocal, message, string.sub(message, 2))
+    local format = handleColors(_if(isLocal, "(&3L&f)", "(&6G&f)") .. " <&e" .. name .. "&f> &7") ..
+    _if(isLocal, message, string.sub(message, 2))
     local pos = player:get_pos()
 
     for _, target in pairs(minetest.get_connected_players()) do
         if isLocal then
-            if distance(pos, target:get_pos()) < 100 then
+            if distance(pos, target:get_pos()) < transfer_distance then
                 minetest.chat_send_player(target:get_player_name(), format)
                 temp = temp + 1
             end
@@ -80,7 +81,9 @@ minetest.register_on_chat_message(function(name, message)
     end
 
     if isLocal and temp == 0 then
-        minetest.chat_send_player(name, handleColors("&8Nobody saw your message because there is no one next to you. Write &7!&8 before the message to send a message to the global chat."))
+        minetest.chat_send_player(name,
+            handleColors(
+            "&8Nobody saw your message because there is no one next to you. Write &7!&8 before the message to send a message to the global chat."))
     end
 
     return true
